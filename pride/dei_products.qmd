@@ -1,0 +1,121 @@
+---
+title: "dei-products"
+format: html
+editor: visual
+---
+
+```{r}
+#load libraries
+library(tidyverse)
+library(janitor)
+
+#upload data
+esp_all <- read_csv("data/esp-all.csv")%>%clean_names()
+```
+
+**Filter data to LGBTQ+ related search terms**
+
+```{r}
+#filter to lgbtq+ related search terms 
+#relevant terms were determined by a manual review of all search terms 
+
+esp_pride <- esp_all %>%
+  filter(keyword %in% c(
+    "GAY", "GAY PRIDE", "GAY PRIDE ITEMS", "LGBT", "LGBTQ", 
+    "LGBTQ LAPEL PIN", "LGBT RAINBOW PRIDE HAND FOLDING FAN", "PRIDE", 
+    "PRIDE ARMBANDS", "PRIDE BANDANA", "PRIDE BITES", "PRIDE CELEBRATION FAN", 
+    "PRIDE FAN", "PRIDE FLAG", "PRIDE GIVEAWAY", "PRIDE HAND FANS", 
+    "PRIDE HEADBANDS", "PRIDE ITEMS", "PRIDE LANDYARD", "PRIDE MONTH", 
+    "PRIDE PEN", "PRIDE PINS", "PRIDE RAINBOW", "PRIDE SLIDES", 
+    "PRIDE SUNGLASSES", "PRIDE WRIST STRAP", "RAINBOW GAY PRIDE", 
+    "RAINBOW PRIDE", "TRANS PRIDE COFFEE"
+  ))
+```
+
+**PRIDE SEARCHES: First half of each year and aggregate by year**
+
+```{r}
+#filter to just the first half of the year
+esp_first_half <- esp_pride %>%
+  select(
+    keyword,  # keep any identifier columns you want
+    matches("^(january|february|march|april|may|june)_\\d{4}$")
+  )
+
+#get the first half of the year and aggregate it by year 
+year_first_half <- esp_first_half %>%
+  pivot_longer(
+    cols = matches("^[a-z]+_\\d{4}$"),  # matches month_year columns
+    names_to = "month_year",
+    values_to = "value"
+  ) %>%
+  mutate(year = sub(".*_(\\d{4})", "\\1", month_year)) %>%
+  group_by(keyword, year) %>%  # adjust grouping if needed
+  summarize(total = sum(value, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(
+    names_from = year,
+    values_from = total
+  )
+
+write_csv(year_first_half, "esp_first_half.csv")
+```
+
+```{r}
+#categorical visualization 
+long_numbers <- year_first_half %>%
+  pivot_longer(
+    cols = -keyword,        
+    names_to = "year",       
+    values_to = "value"      
+  ) %>%
+  drop_na(value)
+
+#normalize the numbers in an index from 0 to 100 (max popularity of search term)
+normalized_df <- long_numbers %>%
+  group_by(keyword) %>%
+  mutate(
+    index = (value / max(value, na.rm = TRUE)) * 100
+  ) %>%
+  ungroup()
+
+write_csv(normalized_df, "normalized_df.csv")
+```
+
+**ALL SEARCHES: First half of each year and aggregate by year**
+
+```{r}
+#first six months of all searches
+all_esp_first_half <- esp_all %>%
+  select(
+    keyword,  
+    matches("^(january|february|march|april|may|june)_\\d{4}$")
+  )
+
+all_first_half_yearly <- all_esp_first_half %>%
+  pivot_longer(
+    cols = matches("^[a-z]+_\\d{4}$"),  # matches month_year columns
+    names_to = "month_year",
+    values_to = "value"
+  ) %>%
+  mutate(year = sub(".*_(\\d{4})", "\\1", month_year)) %>%
+  group_by(keyword, year) %>% 
+  summarize(total = sum(value, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(
+    names_from = year,
+    values_from = total
+  )
+
+write_csv(all_first_half_yearly, "2all_esp_first_half.csv")
+```
+
+**Flourish keyword heatmap**
+```{r}
+long_numbers <- year_binned %>%
+  pivot_longer(
+    cols = -keyword,         # all columns except keyword
+    names_to = "year",       # put year names in this column
+    values_to = "value"      # actual numbers go here
+  ) %>%
+  drop_na(value)
+```
+
