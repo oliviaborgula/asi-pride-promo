@@ -6,4 +6,4 @@ The number of searches for LGBTQ+ and Pride-related product in a databased calle
 
 In this repo, you'll find the R code I used to analyze the bulk search data and clean it into a dataset that could be visualized. 
 
-See the published story <a href="https://members.asicentral.com/news/strategy/july-2025/pride-related-promo-searches-decline-as-brands-scale-back/" target=_blank"> here</a>
+See the published story <a href="https://members.asicentral.com/news/strategy/july-2025/pride-related-promo-searches-decline-as-brands-scale-back/" target=_blank> here</a>
